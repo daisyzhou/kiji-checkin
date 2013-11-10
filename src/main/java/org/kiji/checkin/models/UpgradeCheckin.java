@@ -22,16 +22,17 @@ package org.kiji.checkin.models;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import org.kiji.checkin.VersionInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * <p>Represents a check-in message that can be sent to a Kiji BentoBox upgrade server. A check-in
@@ -46,6 +47,13 @@ import org.slf4j.LoggerFactory;
  */
 public final class UpgradeCheckin implements JsonBeanInterface {
   private static final Logger LOG = LoggerFactory.getLogger(UpgradeCheckin.class);
+
+  private static final String CONFIG_FILE_NAME = "project-name.properties";
+
+  private static final String PROJECT_NAME_PROPERTY = "package-name";
+
+  private static final String DEFAULT_PROJECT_NAME = "bento";
+
 
   /** The type of this message (used by the upgrade server). */
   @SerializedName("type")
@@ -326,7 +334,7 @@ public final class UpgradeCheckin implements JsonBeanInterface {
     public UpgradeCheckin build()
         throws IOException {
       // Ensure the client has completely configured the builder.
-      checkNotNull(mId, "User id not supplied to check-in message builder.");
+      checkNotNull(mId, "User id not supplied to checkin message builder.");
       checkNotNull(mLastUsedMillis, "Last usage timestamp for kiji script not supplied to "
           + "check-in message builder.");
       // Get other message parameters using system properties.
@@ -334,6 +342,30 @@ public final class UpgradeCheckin implements JsonBeanInterface {
       mFormat = MESSAGE_FORMAT;
       mOperatingSystem = getOperatingSystem();
 
+      Properties prop = new Properties();
+      try {
+        InputStream resource = Thread
+            .currentThread()
+            .getContextClassLoader()
+            .getResourceAsStream(CONFIG_FILE_NAME);
+        if (resource == null) {
+          mProjectName = DEFAULT_PROJECT_NAME;
+          LOG.info("TODO(BENTO-60): remove: using default package name: " + mProjectName);
+        } else {
+          prop.load(Thread
+              .currentThread()
+              .getContextClassLoader()
+              .getResourceAsStream(CONFIG_FILE_NAME));
+          mProjectName = prop.getProperty(PROJECT_NAME_PROPERTY);
+          LOG.info(
+              "TODO(BENTO-60): remove: got package name from properties file: " + mProjectName);
+        }
+      } catch (IOException e) {
+        mProjectName = DEFAULT_PROJECT_NAME;
+        LOG.info("TODO(BENTO-60): remove: using default package name: " + mProjectName);
+      }
+      LOG.info(
+          "TODO(BENTO-60): remove: package name property is " + mProjectName);
       mBentoVersion = VersionInfo.getSoftwareVersion(mVersionInfoClass);
       mJavaVersion = getSystemProperty("java.version");
       return new UpgradeCheckin(this);
