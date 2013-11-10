@@ -22,6 +22,7 @@ package org.kiji.checkin.models;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.io.IOException;
+import java.util.Properties;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
@@ -29,6 +30,8 @@ import com.google.gson.annotations.SerializedName;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import org.kiji.checkin.VersionInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>Represents a check-in message that can be sent to a Kiji BentoBox upgrade server. A check-in
@@ -42,6 +45,7 @@ import org.kiji.checkin.VersionInfo;
  * transformed to JSON by calling {@link #toJSON()}.</p>
  */
 public final class UpgradeCheckin implements JsonBeanInterface {
+  private static final Logger LOG = LoggerFactory.getLogger(UpgradeCheckin.class);
 
   /** The type of this message (used by the upgrade server). */
   @SerializedName("type")
@@ -74,6 +78,9 @@ public final class UpgradeCheckin implements JsonBeanInterface {
   @SerializedName("id")
   private final String mId;
 
+  @SerializedName("project_name")
+  private final String mProjectName;
+
   /**
    * Constructs a new check-in message using values in the specified builder.
    *
@@ -87,6 +94,7 @@ public final class UpgradeCheckin implements JsonBeanInterface {
     mJavaVersion = builder.mJavaVersion;
     mLastUsedMillis = builder.mLastUsedMillis;
     mId = builder.mId;
+    mProjectName = builder.mProjectName;
   }
 
   /**
@@ -112,7 +120,8 @@ public final class UpgradeCheckin implements JsonBeanInterface {
         && mBentoVersion.equals(that.getBentoVersion())
         && mJavaVersion.equals(that.getJavaVersion())
         && mLastUsedMillis == that.getLastUsedMillis()
-        && mId.equals(that.getId());
+        && mId.equals(that.getId())
+        && mProjectName.equals(that.getProjectName());
   }
 
   /** {@inheritDoc} */
@@ -126,6 +135,7 @@ public final class UpgradeCheckin implements JsonBeanInterface {
         .append(mJavaVersion)
         .append(mLastUsedMillis)
         .append(mId)
+        .append(mProjectName)
         .toHashCode();
   }
 
@@ -179,6 +189,10 @@ public final class UpgradeCheckin implements JsonBeanInterface {
     return mId;
   }
 
+  public String getProjectName() {
+    return mProjectName;
+  }
+
   /**
    * <p>Can be used to build an upgrade check-in message. Clients should use the "with"
    * methods of this builder to configure message parameters, and then call {@link #build()} to
@@ -213,6 +227,8 @@ public final class UpgradeCheckin implements JsonBeanInterface {
 
     /** The unique and anonymous user identifier to include with the message. */
     private String mId;
+
+    private String mProjectName;
 
     /** Operating system identifier. */
     private String mOperatingSystem;
@@ -264,6 +280,11 @@ public final class UpgradeCheckin implements JsonBeanInterface {
       return this;
     }
 
+    public Builder withProjectName(String projectName) {
+      mProjectName = projectName;
+      return this;
+    }
+
     /**
      * Gets the value for the system property with the specified key. If querying for the system
      * property returns <code>null</code>, this method will throw an
@@ -312,6 +333,7 @@ public final class UpgradeCheckin implements JsonBeanInterface {
       mType = MESSAGE_TYPE;
       mFormat = MESSAGE_FORMAT;
       mOperatingSystem = getOperatingSystem();
+
       mBentoVersion = VersionInfo.getSoftwareVersion(mVersionInfoClass);
       mJavaVersion = getSystemProperty("java.version");
       return new UpgradeCheckin(this);
