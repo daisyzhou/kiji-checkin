@@ -50,9 +50,9 @@ public final class UpgradeCheckin implements JsonBeanInterface {
 
   private static final String CONFIG_FILE_NAME = "project-name.properties";
 
-  private static final String PROJECT_NAME_PROPERTY = "package-name";
+  private static final String PROJECT_NAME_PROPERTY = "project-name";
 
-  private static final String DEFAULT_PROJECT_NAME = "bento";
+  private static final String DEFAULT_PROJECT_NAME = "kiji";
 
 
   /** The type of this message (used by the upgrade server). */
@@ -260,7 +260,8 @@ public final class UpgradeCheckin implements JsonBeanInterface {
      * information.
      */
     public Builder(Class<?> versionInfoClass) {
-      mVersionInfoClass=versionInfoClass;
+      System.out.println("TODO(BENTO-60): remove: Creating new UpgradeCheckin.");
+      mVersionInfoClass = versionInfoClass;
     }
 
     /**
@@ -284,6 +285,7 @@ public final class UpgradeCheckin implements JsonBeanInterface {
      * @return this instance, so configuration can be chained.
      */
     public Builder withId(String id) {
+      System.out.println("TODO(BENTO-60): remove: setting ID in UpgradeCheckin.");
       mId = id;
       return this;
     }
@@ -333,6 +335,7 @@ public final class UpgradeCheckin implements JsonBeanInterface {
      */
     public UpgradeCheckin build()
         throws IOException {
+      System.out.println("TODO(BENTO-60): remove: trying to get project name.");
       // Ensure the client has completely configured the builder.
       checkNotNull(mId, "User id not supplied to checkin message builder.");
       checkNotNull(mLastUsedMillis, "Last usage timestamp for kiji script not supplied to "
@@ -350,22 +353,26 @@ public final class UpgradeCheckin implements JsonBeanInterface {
             .getResourceAsStream(CONFIG_FILE_NAME);
         if (resource == null) {
           mProjectName = DEFAULT_PROJECT_NAME;
-          LOG.info("TODO(BENTO-60): remove: using default package name: " + mProjectName);
+          LOG.error("TODO(BENTO-60): remove: using default package name: " + mProjectName);
+          System.out.println("TODO(BENTO-60): remove: couldn't find resource, using default package name " + mProjectName);
         } else {
           prop.load(Thread
               .currentThread()
               .getContextClassLoader()
               .getResourceAsStream(CONFIG_FILE_NAME));
           mProjectName = prop.getProperty(PROJECT_NAME_PROPERTY);
-          LOG.info(
+          LOG.error(
               "TODO(BENTO-60): remove: got package name from properties file: " + mProjectName);
+          System.out.println("TODO(BENTO-60): remove: Got package name from properties file: " + mProjectName);
         }
       } catch (IOException e) {
         mProjectName = DEFAULT_PROJECT_NAME;
-        LOG.info("TODO(BENTO-60): remove: using default package name: " + mProjectName);
+        LOG.error("TODO(BENTO-60): remove: using default package name: " + mProjectName);
+        System.out.println("TODO(BENTO-60): remove: IOException while opening properties file, using default package name " + mProjectName);
       }
-      LOG.info(
+      LOG.error(
           "TODO(BENTO-60): remove: package name property is " + mProjectName);
+      System.out.println("TODO(BENTO-60): remove: package name property is finally " + mProjectName);
       mBentoVersion = VersionInfo.getSoftwareVersion(mVersionInfoClass);
       mJavaVersion = getSystemProperty("java.version");
       return new UpgradeCheckin(this);
